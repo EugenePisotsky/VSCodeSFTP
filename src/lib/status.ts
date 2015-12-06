@@ -14,17 +14,17 @@ export class StatusBar {
         // Only update status if an MarkDown file 
         if (message) { 
             // Update the status bar
-			let length = 1; 
-			setInterval(() => {
-				length++;
-				if (length > 5)
-					length = 1;
-				
-				let dots = new Array(length % 10).join('.');
-				
-				this._statusBarItem.text = message + dots;
-				this._statusBarItem.show();
-			}, 300); 
+            let length = 1; 
+            setInterval(() => {
+                length++;
+                if (length > 5)
+                    length = 1;
+                
+                let dots = new Array(length % 10).join('.');
+                
+                this._statusBarItem.text = message + dots;
+                this._statusBarItem.show();
+            }, 300); 
         } else { 
             this._statusBarItem.hide(); 
         } 

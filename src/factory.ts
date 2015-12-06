@@ -3,7 +3,7 @@ import {SFTP} from '../src/lib/sftp';
 import {Settings} from '../src/lib/settings';
 
 export class Factory {
-	static status: StatusBar = new StatusBar();
-	static settings: Settings = new Settings();
-	static sftp: SFTP = new SFTP();
+    static status: StatusBar = new StatusBar();
+    static settings: Settings = new Settings();
+    static sftp: SFTP = new SFTP();
 }

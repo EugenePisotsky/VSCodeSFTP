@@ -20,7 +20,7 @@ export class Settings {
         private_key?: string
     } = {};
     
-	defaultConfig: string = `{
+    defaultConfig: string = `{
     // SFTP default config
     
     // sftp, ftp or ftps
@@ -43,7 +43,7 @@ export class Settings {
     "connect_timeout": 30
 }`;
 
-	public init(callback: () => any) {
+    public init(callback: () => any) {
         fs.exists(this.configPath, (exists) => {
             if (exists) {
                 this.createDefaultConfig(callback);
@@ -51,7 +51,7 @@ export class Settings {
                 fs.mkdir(this.configPath, () => this.createDefaultConfig(callback));
             }
         });
-	}
+    }
     
     public initConfig() {
         if (fs.existsSync(this.configFilePath)) {
@@ -63,13 +63,13 @@ export class Settings {
     }
     
     private createDefaultConfig(callback: () => any) {
-		fs.writeFile(this.configFilePath, this.defaultConfig, (err) => {
-			if(err) {
-				return console.log(err);
-			}
-		
-			callback();
-		});
+        fs.writeFile(this.configFilePath, this.defaultConfig, (err) => {
+            if(err) {
+                return console.log(err);
+            }
+        
+            callback();
+        });
     }
     
     public check(callback: (exists: boolean) => any) {
