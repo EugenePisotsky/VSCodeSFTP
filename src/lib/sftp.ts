@@ -1,5 +1,9 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
 import {Factory} from '../../src/factory';
+
+var mkdirp = require('mkdirp');
 
 export class SFTP {
     fs = require('fs');
@@ -27,17 +31,17 @@ export class SFTP {
                 if (this.connected) {
                     resolve();
                 } else {
-                    console.log(`Connecting to ${Factory.settings.config.user}@${Factory.settings.config.host}`);
+                    console.log(`Connecting to ${Factory.settings.config.username}@${Factory.settings.config.host}`);
                     this.conn.on('ready', () => {
                             this.connected = true;
-                            console.log(`Success connected to ${Factory.settings.config.user}@${Factory.settings.config.host}`);
+                            console.log(`Success connected to ${Factory.settings.config.username}@${Factory.settings.config.host}`);
                             resolve();
                         }).on('error', error => {
                             reject(error);
                         }).connect({
                             host: Factory.settings.config.host || 'localhost',
                             port: Factory.settings.config.port || 22,
-                            username: Factory.settings.config.user || 'root',
+                            username: Factory.settings.config.username || 'root',
                             privateKey: Factory.settings.config.private_key ? 
                                         require('fs').readFileSync(Factory.settings.config.private_key) : false    
                         }); 
@@ -87,6 +91,61 @@ export class SFTP {
                 error => reject(error)                
             );
         });
+    }
+    
+    public downloadDir(p: string) {
+        return new Promise((resolve, reject) => {
+            let map = [];
+            let pending = 1;
+            
+            let result = () => {
+                for (let f of map) {
+                    let [pathType, pathValue] = f;
+                    console.log(pathType, path.join(vscode.workspace.rootPath, pathValue));
+                    
+                    if (pathType == 'dir') {
+                        mkdirp(path.join(vscode.workspace.rootPath, pathValue));
+                    } else {
+                        this.sftpConnection.fastGet(
+                            [Factory.settings.config.remote_path, pathValue].join(Factory.settings.slash),
+                            path.join(vscode.workspace.rootPath, pathValue),
+                            (err, handle) => {
+                                // test
+                            });
+                    }
+                }
+                
+                // resolve(map);
+            }
+            
+            let create = (dir) => {
+                map.push(['dir', dir.replace(Factory.settings.config.remote_path, '')]);
+                
+                this.sftpConnection.readdir(dir, (err, list) => {
+                    if (list) {
+                        pending += list.length;
+                                        
+                        for (let file of list) {
+                            let newPath = [dir, file.filename].join(Factory.settings.slash);
+                            
+                            if (file['attrs'].isDirectory()) {
+                                create(newPath);
+                                
+                                if (!pending) result();
+                            } else {
+                                pending -= 1;
+                                map.push(['file', newPath.replace(Factory.settings.config.remote_path, '')]);
+                            }
+                        }
+                        
+                        pending -= 1; 
+                        if (!pending) result();                    
+                    }
+                });
+            };
+            
+            create(p);            
+        });        
     }
     
     public rename(name: string, path: string = null) {

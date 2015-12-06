@@ -28,10 +28,6 @@
       },
       {
         "command": "extension.browse",
-        "title": "SFTP: Browse remote (current dir)"
-      },
-      {
-        "command": "extension.browse",
         "title": "SFTP: Sync local > remote"
       },
       {
@@ -53,6 +49,8 @@
     "vscode": "0.10.x"
   },
   "dependencies": {
+    "ftp": "^0.3.10",
+    "mkdirp": "^0.5.1",
     "ssh2": "^0.4.12",
     "strip-json-comments": "^2.0.0",
     "tmp": "0.0.28"

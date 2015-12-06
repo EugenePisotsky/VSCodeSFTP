@@ -3,8 +3,9 @@ import * as vscode from 'vscode';
 export class StatusBar {
 
     private _statusBarItem: vscode.StatusBarItem;
+    private tm;
 
-    public showLoading(message=null) {
+    public loading(message=null) {
 
         // Create as needed 
         if (!this._statusBarItem) { 
@@ -15,7 +16,7 @@ export class StatusBar {
         if (message) { 
             // Update the status bar
             let length = 1; 
-            setInterval(() => {
+            this.tm = setInterval(() => {
                 length++;
                 if (length > 5)
                     length = 1;
@@ -25,12 +26,12 @@ export class StatusBar {
                 this._statusBarItem.text = message + dots;
                 this._statusBarItem.show();
             }, 300); 
-        } else { 
-            this._statusBarItem.hide(); 
-        } 
+        }
     }
 
     dispose() {
         this._statusBarItem.dispose();
+        this._statusBarItem = null;
+        clearInterval(this.tm);
     }
 }

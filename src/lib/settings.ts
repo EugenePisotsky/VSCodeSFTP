@@ -1,6 +1,10 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import {Factory} from '../../src/factory';
+
+import {SFTP} from '../../src/lib/sftp';
+import {FTP} from '../../src/lib/ftp';
 
 export class Settings {
     stripJsonComments = require('strip-json-comments');
@@ -11,9 +15,10 @@ export class Settings {
     slash: string = '/';
     
     config: {
+        type?: string,
         upload_on_save?: boolean,
         host?: string,
-        user?: string,
+        username?: string,
         password?: string,
         port?: string,
         remote_path?: string,
@@ -58,6 +63,12 @@ export class Settings {
             this.config = JSON.parse(this.stripJsonComments(fs.readFileSync(this.configFilePath, 'utf8')));
             if (this.config.remote_path.includes("\\")) {
                 this.slash = "\\";
+            }
+            
+            if (this.config.type == 'sftp') {
+                Factory.client = new SFTP();
+            } else {
+                Factory.client = new FTP();
             }
         }
     }

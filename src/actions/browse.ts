@@ -13,7 +13,7 @@ export function actionBrowse() {
         
         if (index > 2) {
             if (result.includes(Factory.settings.slash))
-                navigate([Factory.sftp.lastDir, result].join(Factory.settings.slash));
+                navigate([Factory.client.lastDir, result].join(Factory.settings.slash));
             else {
                 let actionBox = () => {
                     /*
@@ -34,23 +34,23 @@ export function actionBrowse() {
                             let index = choises.findIndex((value) => value == result);
                             
                             if (!result)
-                                navigate(Factory.sftp.lastDir);
+                                navigate(Factory.client.lastDir);
                                 
                             switch(index) {
                                 case 0:
-                                    navigate(Factory.sftp.lastDir);
+                                    navigate(Factory.client.lastDir);
                                 break;
                                 case 2:
                                     let filename = file.split(Factory.settings.slash).pop(),
                                         tmpDir = path.join(vscode.workspace.rootPath, '.vscode', '.tmp'),
                                         tmpname = tmp.tmpNameSync({ 
-                                            template: `${tmpDir}tmp-XXXXXX${path.extname(filename)}` 
+                                            template: `${tmpDir}${path.sep}tmp-XXXXXX${path.extname(filename)}` 
                                         });
                                     
                                     if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir);
                                     
-                                    Factory.sftp.download(
-                                        [Factory.sftp.lastDir, filename].join(Factory.settings.slash), 
+                                    Factory.client.download(
+                                        [Factory.client.lastDir, filename].join(Factory.settings.slash), 
                                         tmpname
                                     ).then(
                                         result => {
@@ -67,35 +67,35 @@ export function actionBrowse() {
                                         result => {
                                             if (!result) return actionBox();
                                             
-                                            Factory.sftp.rename(result, 
-                                                                [Factory.sftp.lastDir, file].join(Factory.settings.slash)
+                                            Factory.client.rename(
+                                                result, 
+                                                [Factory.client.lastDir, file].join(Factory.settings.slash)
                                             ).then(
-                                                result => navigate(Factory.sftp.lastDir),
-                                                error => console.log(error)
+                                                result => navigate(Factory.client.lastDir),
+                                                error => vscode.window.showWarningMessage(error.message || error)
                                             );
                                         },
-                                        error => console.log(error)
+                                        error => vscode.window.showWarningMessage(error.message || error)
                                     );
                                 break;
                                 case 4:
-                                    let filePath: string = [Factory.sftp.lastDir, file].join(Factory.settings.slash),
-                                        pick: Promise<string[]> = new Promise((resolve, reject) => resolve())
-                                                                 .then(result => ['Yes', 'No']);
+                                    let filePath: string = [Factory.client.lastDir, file].join(Factory.settings.slash),
+                                        pick: Promise<string[]> = new Promise((resolve, reject) => resolve()).then(result => ['Yes', 'No']);
                                     
                                     vscode.window.showQuickPick(pick, {
                                         placeHolder: `Are you sure? (${filePath})`
                                     }).then(
                                         result => {
                                             if (result == 'Yes') {
-                                                navigate(Factory.sftp.lastDir);
-                                                Factory.sftp.rmFile(filePath).then(
+                                                navigate(Factory.client.lastDir);
+                                                Factory.client.rmFile(filePath).then(
                                                     result => true,
-                                                    error => console.log(error)
+                                                    error => vscode.window.showWarningMessage(error.message || error)
                                                 );
                                             } else
                                                 return actionBox();
                                         }
-                                    );                                
+                                    );
                                 break;
                             }
                         },
@@ -103,27 +103,24 @@ export function actionBrowse() {
                     );
                 };
                 
-                actionBox();                                    
+                actionBox();
             }
         } else {
             switch (index) {
                 case 0:
                     vscode.window.showInputBox({
                         prompt: 'Browse to',
-                        value: Factory.sftp.lastDir
+                        value: Factory.client.lastDir
                     }).then(
                         result => {
-                            if (!result) return navigate(Factory.sftp.lastDir);
+                            if (!result) return navigate(Factory.client.lastDir);
                             navigate(result);
                         },
-                        error => console.log(error)
+                        error => vscode.window.showWarningMessage(error.message || error)
                     );
                 break;
                 case 1:
-                    let actionBox = () => {
-                        /*
-                        * @TODO Download
-                        */                        
+                    let actionBox = () => {                        
                         let choises = [
                             '● Back to list',
                             '● New file',
@@ -134,17 +131,17 @@ export function actionBrowse() {
                         ];
                     
                         vscode.window.showQuickPick(choises, {
-                            placeHolder: Factory.sftp.lastDir
+                            placeHolder: Factory.client.lastDir
                         }).then(
                             result => {
                                 let index = choises.findIndex((value) => value == result);
                                 
                                 if (!result)
-                                    navigate(Factory.sftp.lastDir);                                
+                                    navigate(Factory.client.lastDir);                                
                                 
                                 switch(index) {
                                     case 0:
-                                        navigate(Factory.sftp.lastDir);
+                                        navigate(Factory.client.lastDir);
                                     break;
                                     case 1:
                                         vscode.window.showInputBox({
@@ -153,12 +150,12 @@ export function actionBrowse() {
                                             result => {
                                                 if (!result) return actionBox();
                                                 
-                                                Factory.sftp.createFile(result).then(
-                                                    result => navigate(Factory.sftp.lastDir),
-                                                    error => console.log(error)
+                                                Factory.client.createFile(result).then(
+                                                    result => navigate(Factory.client.lastDir),
+                                                    error => vscode.window.showWarningMessage(error.message || error)
                                                 );
                                             },
-                                            error => console.log(error)
+                                            error => vscode.window.showWarningMessage(error.message || error)
                                         );
                                     break;
                                     case 2:
@@ -168,57 +165,44 @@ export function actionBrowse() {
                                             result => {
                                                 if (!result) return actionBox();
                                                 
-                                                Factory.sftp.mkDir(result).then(
-                                                    result => navigate(Factory.sftp.lastDir),
-                                                    error => console.log(error)
+                                                Factory.client.mkDir(result).then(
+                                                    result => navigate(Factory.client.lastDir),
+                                                    error => vscode.window.showWarningMessage(error.message || error)
                                                 );
                                             },
-                                            error => console.log(error)
+                                            error => vscode.window.showWarningMessage(error.message || error)
                                         );
                                     break;
                                     case 3:
                                         vscode.window.showInputBox({
-                                            value: Factory.sftp.lastDir.split(Factory.settings.slash).pop()
+                                            value: Factory.client.lastDir.split(Factory.settings.slash).pop()
                                         }).then(
                                             result => {
                                                 if (!result) return actionBox();
                                                 
-                                                Factory.sftp.rename(result).then(
-                                                    result => navigate(Factory.sftp.prevDir),
-                                                    error => console.log(error)
+                                                Factory.client.rename(result).then(
+                                                    result => navigate(Factory.client.prevDir),
+                                                    error => vscode.window.showWarningMessage(error.message || error)
                                                 );
                                             },
-                                            error => console.log(error)
+                                            error => vscode.window.showWarningMessage(error.message || error)
                                         );
                                     break;    
                                     case 4:
-                                        vscode.window.showInputBox({
-                                            value: Factory.sftp.lastDir.split(Factory.settings.slash).pop()
-                                        }).then(
-                                            result => {
-                                                if (!result) return actionBox();
-                                                
-                                                Factory.sftp.rename(result).then(
-                                                    result => navigate(Factory.sftp.prevDir),
-                                                    error => console.log(error)
-                                                );
-                                            },
-                                            error => console.log(error)
-                                        );
+                                        Factory.client.downloadDir(Factory.client.lastDir);
                                     break;                                                                                
                                     case 5:
                                         let pick: Promise<string[]> = new Promise((resolve, reject) => resolve())
                                             .then(result => ['Yes', 'No']);
                                         
                                         vscode.window.showQuickPick(pick, {
-                                            placeHolder: `Are you sure? (${Factory.sftp.lastDir})`
+                                            placeHolder: `Are you sure? (${Factory.client.lastDir})`
                                         }).then(
                                             result => {
                                                 if (result == 'Yes') {
-                                                    navigate(Factory.sftp.prevDir);
-                                                    Factory.sftp.rmDir().then(
-                                                        result => true,
-                                                        error => console.log(error)
+                                                    Factory.client.rmDir().then(
+                                                        result => navigate(Factory.client.prevDir),
+                                                        error => vscode.window.showWarningMessage(error.message || error)
                                                     );
                                                 } else
                                                     return actionBox();
@@ -234,18 +218,18 @@ export function actionBrowse() {
                     actionBox();                                                    
                 break;
                 case 2:
-                    navigate([Factory.sftp.lastDir, '..'].join(Factory.settings.slash));
+                    navigate([Factory.client.lastDir, '..'].join(Factory.settings.slash));
                 break;
             }
         }            
     };
             
     let navigate = function(path) {
-        Factory.status.showLoading(`Browse: ${path}`);
+        Factory.status.loading(`Browse: ${path}`);
         
-        Factory.sftp.connect()
+        Factory.client.connect()
             .then(
-                result => Factory.sftp.navigate(path),
+                result => Factory.client.navigate(path),
                 error => vscode.window.showWarningMessage(error.message)
             )
             .then(
@@ -254,7 +238,7 @@ export function actionBrowse() {
                     
                     if (result) {                            
                         let files = [
-                            `${Factory.settings.config.host}:${Factory.sftp.lastDir}`,
+                            `${Factory.settings.config.host}:${Factory.client.lastDir}`,
                             `● Folder actions`,
                             `● Up a folder`,
                             ...result
@@ -279,5 +263,5 @@ export function actionBrowse() {
             );
     };
     
-    navigate(Factory.settings.config.remote_path);        
+    navigate(Factory.settings.config.remote_path);
 }
