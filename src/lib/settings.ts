@@ -22,7 +22,8 @@ export class Settings {
         password?: string,
         port?: string,
         remote_path?: string,
-        private_key?: string
+        private_key?: string,
+        connect_timeout?: number
     } = {};
     
     defaultConfig: string = `{
@@ -45,7 +46,7 @@ export class Settings {
     
     "private_key": "",
 
-    "connect_timeout": 30
+    "connect_timeout": 30000
 }`;
 
     public init(callback: () => any) {

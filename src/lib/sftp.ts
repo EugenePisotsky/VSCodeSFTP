@@ -42,6 +42,7 @@ export class SFTP {
                             host: Factory.settings.config.host || 'localhost',
                             port: Factory.settings.config.port || 22,
                             username: Factory.settings.config.username || 'root',
+                            readyTimeout: Factory.settings.config.connect_timeout || 10000,
                             privateKey: Factory.settings.config.private_key ? 
                                         require('fs').readFileSync(Factory.settings.config.private_key) : false    
                         }); 
@@ -52,13 +53,18 @@ export class SFTP {
         });              
     }
 
-    public download(path, dest) {
+    public download(p, dest) {
         return new Promise((resolve, reject) => {
+            let dir = dest.split(Factory.settings.slash);
+            dir.pop();
+            
             this.connect().then(
                 result => this.sftp()
             ).then(
+                result => mkdirp(dir.join(path.sep))
+            ).then(
                 result => {
-                    this.sftpConnection.fastGet(path, dest, (err, handle) => {
+                    this.sftpConnection.fastGet(p, dest, (err, handle) => {
                         if (err)
                             reject(err);
                         else

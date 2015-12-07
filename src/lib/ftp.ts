@@ -40,7 +40,9 @@ export class FTP {
                         host: Factory.settings.config.host || 'localhost',
                         port: Factory.settings.config.port || 21,
                         user: Factory.settings.config.username || 'anonymous',
-                        password: Factory.settings.config.password || 'anonymous@'   
+                        password: Factory.settings.config.password || 'anonymous@',
+                        connTimeout: Factory.settings.config.connect_timeout || 10000,
+                        pasvTimeout: Factory.settings.config.connect_timeout || 10000
                     });
                 }
             }  catch (e) {
@@ -49,9 +51,12 @@ export class FTP {
         });        
     }
 
-    public download(path, dest) {
+    public download(p, dest) {               
         return new Promise((resolve, reject) => {
-            this.conn.get(path, (err, fileStream) => {
+            let dir = dest.split(path.sep);
+            dir.pop();
+                              
+            this.conn.get(p, (err, fileStream) => {
                 if (err)
                     return reject(err);
                 
@@ -59,27 +64,37 @@ export class FTP {
                 fileStream.on('data', (buffer) => {
                     result += buffer.toString();
                 });
-                               
+                            
                 fileStream.on('end', () => {
-                    fs.writeFile(dest, result, (err) => {
-                        if (err) return reject(err);
-                        resolve();
+                    mkdirp(dir.join(path.sep), err => {
+                        fs.writeFile(dest, result, (err) => {
+                            if (err) return reject(err);
+                            resolve();
+                        });
                     });
                 });
-            });
+            });                        
         });
     }
     
     public copy(fullPath, path) {
         return new Promise((resolve, reject) => {
+            let dir = (Factory.settings.config.remote_path + path).split(Factory.settings.slash);
+            dir.pop();            
+            
             this.connect().then(
                 result => {
-                    this.conn.put(fullPath, Factory.settings.config.remote_path + path, err => {
+                    this.conn.mkdir(dir.join(Factory.settings.slash), true, err => {
                         if (err)
                             return reject(err);
                         
-                        resolve();
-                    });                    
+                        this.conn.put(fullPath, Factory.settings.config.remote_path + path, err => {
+                            if (err)
+                                return reject(err);
+                            
+                            resolve();
+                        });  
+                    });
                 }
             );
         });

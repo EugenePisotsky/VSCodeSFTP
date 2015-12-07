@@ -16,9 +16,6 @@ export function actionBrowse() {
                 navigate([Factory.client.lastDir, result].join(Factory.settings.slash));
             else {
                 let actionBox = () => {
-                    /*
-                    * @TODO Download
-                    */
                     let choises = [
                         '● Back to list',
                         '● Download',
@@ -40,6 +37,21 @@ export function actionBrowse() {
                                 case 0:
                                     navigate(Factory.client.lastDir);
                                 break;
+                                case 1:
+                                    Factory.client.download(
+                                        [Factory.client.lastDir, file].join(Factory.settings.slash),
+                                        path.join(
+                                            vscode.workspace.rootPath,
+                                            Factory.client.lastDir.replace(Factory.settings.config.remote_path, ''), 
+                                            file
+                                        )
+                                    ).then(
+                                        result => {
+                                            //
+                                        },
+                                        error => vscode.window.showWarningMessage(error.message || error)
+                                    );
+                                break;
                                 case 2:
                                     let filename = file.split(Factory.settings.slash).pop(),
                                         tmpDir = path.join(vscode.workspace.rootPath, '.vscode', '.tmp'),
@@ -57,7 +69,7 @@ export function actionBrowse() {
                                             vscode.workspace.openTextDocument(tmpname)
                                                             .then(result => vscode.window.showTextDocument(result));
                                         },
-                                        error => vscode.window.showWarningMessage(error.message)
+                                        error => vscode.window.showWarningMessage(error.message || error)
                                     );
                                 break;
                                 case 3:
